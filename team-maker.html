@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모둠 편성하기</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #fef6f0 0%, #fef0f5 50%, #f0f4ff 100%);
+    min-height: 100vh;
+    color: #3d3d3d;
+    padding: 24px;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #5a4a8a;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    font-size: 15px;
+    color: #8b7fa8;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(150, 130, 180, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+  }
+  .step {
+    display: none;
+  }
+  .step.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #5a4a8a;
+    margin-bottom: 8px;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: #8b7fa8;
+    margin-bottom: 24px;
+  }
+  .input-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .input-row label {
+    font-weight: 600;
+    color: #6b5a9a;
+    min-width: 110px;
+  }
+  input[type="number"], input[type="text"], textarea {
+    font-family: inherit;
+    font-size: 15px;
+    padding: 12px 16px;
+    border: 2px solid #e8ddf0;
+    border-radius: 12px;
+    background: white;
+    color: #3d3d3d;
+    transition: all 0.2s;
+    outline: none;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, textarea:focus {
+    border-color: #b8a5d8;
+    box-shadow: 0 0 0 3px rgba(184, 165, 216, 0.2);
+  }
+  input[type="number"] { width: 120px; }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    font-family: inherit;
+  }
+  .btn {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, #b8a5d8 0%, #d8a5c5 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(184, 165, 216, 0.3);
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 165, 216, 0.4);
+  }
+  .btn:active {
+    transform: translateY(0);
+  }
+  .btn.secondary {
+    background: white;
+    color: #8b7fa8;
+    border: 2px solid #e8ddf0;
+    box-shadow: none;
+  }
+  .btn.secondary:hover {
+    background: #faf6ff;
+    border-color: #d8c5e8;
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .help-text {
+    font-size: 13px;
+    color: #a598b8;
+    margin-top: 6px;
+  }
+  .preassign-area {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(250, 240, 255, 0.6);
+    border-radius: 14px;
+    border: 1px dashed #d8c5e8;
+  }
+  .preassign-team {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .preassign-team label {
+    min-width: 80px;
+    font-weight: 600;
+    color: #6b5a9a;
+    padding-top: 10px;
+    font-size: 14px;
+  }
+  .preassign-team input {
+    flex: 1;
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+  .teams-stage {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-top: 24px;
+  }
+  .team-box {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    min-height: 220px;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-box.t0 { border-color: #f4c0d1; background: linear-gradient(180deg, #fff 0%, #fdf4f7 100%); }
+  .team-box.t1 { border-color: #cecbf6; background: linear-gradient(180deg, #fff 0%, #f7f5ff 100%); }
+  .team-box.t2 { border-color: #9fe1cb; background: linear-gradient(180deg, #fff 0%, #f0faf6 100%); }
+  .team-box.t3 { border-color: #fac775; background: linear-gradient(180deg, #fff 0%, #fff7e9 100%); }
+  .team-box.t4 { border-color: #b5d4f4; background: linear-gradient(180deg, #fff 0%, #f1f7fd 100%); }
+  .team-box.t5 { border-color: #f5c4b3; background: linear-gradient(180deg, #fff 0%, #fdf4ef 100%); }
+  .team-box.t6 { border-color: #c0dd97; background: linear-gradient(180deg, #fff 0%, #f5fae9 100%); }
+  .team-box.t7 { border-color: #d3d1c7; background: linear-gradient(180deg, #fff 0%, #f8f7f3 100%); }
+  .team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(150, 130, 180, 0.2);
+  }
+  .team-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #5a4a8a;
+  }
+  .team-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b7fa8;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+  .members {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 100px;
+  }
+  .member {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a3d6e;
+    border: 1px solid rgba(150, 130, 180, 0.15);
+    cursor: grab;
+    user-select: none;
+    transition: all 0.2s;
+    animation: drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .member.preassigned {
+    background: linear-gradient(90deg, #fff9e6 0%, #fff 100%);
+    border-color: #fac775;
+  }
+  .member.preassigned::before {
+    content: '★';
+    color: #ef9f27;
+    margin-right: 6px;
+    font-size: 12px;
+  }
+  .member:hover {
+    border-color: #b8a5d8;
+    transform: translateX(2px);
+  }
+  .member.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+  .members.drag-over {
+    background: rgba(184, 165, 216, 0.1);
+    border-radius: 10px;
+  }
+  @keyframes drop {
+    0% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+    60% { opacity: 1; transform: translateY(4px) scale(1.05); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .drawing-stage {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 20px;
+  }
+  .drawing-label {
+    font-size: 14px;
+    color: #8b7fa8;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .drawing-name {
+    font-size: 42px;
+    font-weight: 800;
+    color: #5a4a8a;
+    letter-spacing: -1px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s;
+  }
+  .drawing-name.pulse {
+    animation: pulse 0.3s ease;
+  }
+  .drawing-name.reveal {
+    color: #d4537e;
+    animation: reveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes reveal {
+    0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(2deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .arrow-indicator {
+    font-size: 18px;
+    color: #b8a5d8;
+    margin: 14px 0 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .arrow-indicator.show {
+    opacity: 1;
+  }
+  .target-team {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1d9e75;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.4s;
+  }
+  .target-team.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .progress-bar {
+    height: 8px;
+    background: #f0e8f8;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #b8a5d8, #d8a5c5);
+    transition: width 0.3s;
+    border-radius: 4px;
+  }
+  .info-banner {
+    background: rgba(255, 247, 233, 0.8);
+    border-left: 4px solid #fac775;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #854f0b;
+  }
+  .result-banner {
+    background: rgba(225, 245, 238, 0.8);
+    border-left: 4px solid #5dcaa5;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #0f6e56;
+    font-weight: 600;
+  }
+  .hint {
+    text-align: center;
+    font-size: 13px;
+    color: #a598b8;
+    margin-top: 16px;
+    font-style: italic;
+  }
+  .move-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: rgba(238, 237, 254, 0.9);
+    border-left: 4px solid #7f77dd;
+    padding: 12px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #3c3489;
+    font-weight: 600;
+    animation: fadeIn 0.2s ease;
+  }
+  .btn.small {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+  .file-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .file-status-ok {
+    color: #0f6e56 !important;
+    font-weight: 600;
+  }
+  .member.selected {
+    background: linear-gradient(90deg, #eeedfe 0%, #fff 100%) !important;
+    border-color: #7f77dd !important;
+    box-shadow: 0 0 0 3px rgba(127, 119, 221, 0.25);
+    transform: scale(1.02);
+  }
+  .team-box.move-target {
+    cursor: pointer;
+    animation: targetPulse 1.2s ease-in-out infinite;
+  }
+  .team-box.move-target:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(127, 119, 221, 0.25);
+  }
+  @keyframes targetPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(127, 119, 221, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(127, 119, 221, 0); }
+  }
+  #teamsStageFinal .member {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>철학 팀 편성</h1>
+    <p>좋은 협력 실천하기</p>
+  </header>
+
+  <div class="card">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 25%;"></div></div>
+
+    <div class="step active" id="step1">
+      <h2 class="step-title">1단계 · 모둠 수 정하기</h2>
+      <p class="step-desc">몇 개의 모둠으로 나눌까요? (2~8개)</p>
+      <div class="input-row">
+        <label for="teamCount">모둠 수</label>
+        <input type="number" id="teamCount" min="2" max="8" value="4">
+        <span class="help-text">개</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="goToStep(2)">다음으로 →</button>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <h2 class="step-title">2단계 · 학생 입력</h2>
+      <p class="step-desc">학생 이름을 한 줄에 한 명씩 입력하거나, 텍스트 파일로 불러올 수 있어요.</p>
+      <div class="input-row">
+        <label for="studentCount">총 학생 수</label>
+        <input type="number" id="studentCount" min="2" max="200" value="24">
+        <span class="help-text">명 (입력한 이름 수와 달라도 괜찮아요)</span>
+      </div>
+      <div class="file-upload-row">
+        <input type="file" id="fileInput" accept=".txt,.csv" style="display:none;" onchange="loadStudentFile(event)">
+        <button class="btn secondary small" type="button" onclick="document.getElementById('fileInput').click()">📄 학생 명단 파일 불러오기</button>
+        <span class="help-text" id="fileStatus">.txt 또는 .csv 파일 (한 줄에 한 명, 또는 쉼표 구분)</span>
+      </div>
+      <textarea id="studentNames" placeholder="김민준&#10;이서연&#10;박지훈&#10;최수아&#10;..."></textarea>
+      <p class="help-text">이름을 비워두면 '학생 1, 학생 2...'로 자동 생성됩니다.</p>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="goToStep(1)">← 이전</button>
+        <button class="btn" onclick="goToStep(3)">다음으로 →</button>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <h2 class="step-title">3단계 · 고정 배정 (선택)</h2>
+      <p class="step-desc">특정 학생을 원하는 모둠에 먼저 배정할 수 있어요. 비워두면 모두 랜덤으로 편성돼요.</p>
+      <div class="info-banner">예) 1모둠에 "김민준, 이서연" 이라고 입력하면 이 두 명은 1모둠에 고정되고 나머지만 무작위로 뽑혀요.</div>
+      <div class="preassign-area" id="preassignArea"></div>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="goToStep(2)">← 이전</button>
+        <button class="btn" onclick="startDrawing()">편성 시작하기 ✨</button>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <h2 class="step-title">4단계 · 편성 중...</h2>
+      <p class="step-desc">한 명씩 공정하게 모둠에 배정되고 있어요.</p>
+      <div class="drawing-stage">
+        <div class="drawing-label">다음 학생은...</div>
+        <div class="drawing-name" id="drawingName">-</div>
+        <div class="arrow-indicator" id="arrowIndicator">↓</div>
+        <div class="target-team" id="targetTeam"></div>
+      </div>
+      <div class="teams-stage" id="teamsStageDrawing"></div>
+    </div>
+
+    <div class="step" id="step5">
+      <h2 class="step-title">5단계 · 편성 완료!</h2>
+      <div class="result-banner">✓ 편성이 끝났어요. 학생 이름을 <b>탭</b>하거나 <b>드래그</b>해서 다른 모둠으로 옮길 수 있어요.</div>
+      <div id="moveHint" class="move-hint" style="display:none;">
+        <span id="moveHintText">학생을 선택했어요.</span>
+        <button class="btn secondary small" onclick="cancelMove()">취소</button>
+      </div>
+      <div class="teams-stage" id="teamsStageFinal"></div>
+      <p class="hint">학생 이름을 탭하면 이동 모드가 되고, 옮길 모둠을 탭하면 이동합니다. PC에서는 드래그도 가능해요.</p>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="resetAll()">처음부터 다시</button>
+        <button class="btn secondary" onclick="reshuffle()">다시 섞기</button>
+        <button class="btn" onclick="printResult()">결과 인쇄/저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let state = {
+    teamCount: 4,
+    studentCount: 24,
+    studentNames: [],
+    preassigned: [],
+    teams: [],
+    step: 1
+  };
+
+  const teamEmojis = ['🌸', '🌟', '🌿', '☀️', '💧', '🍊', '🌱', '🪨'];
+  const teamNames = ['1모둠', '2모둠', '3모둠', '4모둠', '5모둠', '6모둠', '7모둠', '8모둠'];
+
+  function goToStep(n) {
+    if (n === 2) {
+      const v = parseInt(document.getElementById('teamCount').value);
+      if (!v || v < 2 || v > 8) {
+        alert('모둠 수는 2개 이상 8개 이하로 입력해 주세요.');
+        return;
+      }
+      state.teamCount = v;
+    }
+    if (n === 3) {
+      const v = parseInt(document.getElementById('studentCount').value);
+      if (!v || v < 2) {
+        alert('학생 수는 2명 이상이어야 해요.');
+        return;
+      }
+      state.studentCount = v;
+      const raw = document.getElementById('studentNames').value.trim();
+      let names = raw ? raw.split('\n').map(s => s.trim()).filter(s => s.length > 0) : [];
+      if (names.length < v) {
+        for (let i = names.length; i < v; i++) names.push(`학생 ${i + 1}`);
+      } else if (names.length > v) {
+        names = names.slice(0, v);
+      }
+      state.studentNames = names;
+      buildPreassignArea();
+    }
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    state.step = n;
+    document.getElementById('progressFill').style.width = (n * 20) + '%';
+  }
+
+  function buildPreassignArea() {
+    const area = document.getElementById('preassignArea');
+    area.innerHTML = '';
+    for (let i = 0; i < state.teamCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'preassign-team';
+      row.innerHTML = `
+        <label>${teamEmojis[i]} ${teamNames[i]}</label>
+        <input type="text" data-team="${i}" placeholder="쉼표로 구분해 입력 (예: 김민준, 이서연)">
+      `;
+      area.appendChild(row);
+    }
+  }
+
+  function normalizeName(s) {
+    return s.replace(/\s+/g, '').toLowerCase();
+  }
+
+  function collectPreassigned() {
+    const assigned = {};
+    const allAssigned = new Set();
+    const unmatched = [];
+    const nameMap = {};
+    state.studentNames.forEach(n => { nameMap[normalizeName(n)] = n; });
+    const inputs = document.querySelectorAll('#preassignArea input');
+    inputs.forEach(inp => {
+      const teamIdx = parseInt(inp.dataset.team);
+      const names = inp.value.split(/[,，、\n]/).map(s => s.trim()).filter(s => s);
+      assigned[teamIdx] = [];
+      names.forEach(n => {
+        const matched = nameMap[normalizeName(n)];
+        if (matched && !allAssigned.has(matched)) {
+          assigned[teamIdx].push(matched);
+          allAssigned.add(matched);
+        } else if (!matched) {
+          unmatched.push(n);
+        }
+      });
+    });
+    return { assigned, allAssigned, unmatched };
+  }
+
+  function startDrawing() {
+    const { assigned, allAssigned, unmatched } = collectPreassigned();
+    if (unmatched.length > 0) {
+      const ok = confirm(`다음 이름은 2단계 학생 목록에 없어서 배정되지 않아요:\n\n${unmatched.join(', ')}\n\n그래도 계속할까요? (취소를 누르면 이전 단계로 돌아가 수정할 수 있어요)`);
+      if (!ok) return;
+    }
+    state.teams = [];
+    for (let i = 0; i < state.teamCount; i++) {
+      state.teams.push({
+        name: teamNames[i],
+        emoji: teamEmojis[i],
+        members: (assigned[i] || []).map(n => ({ name: n, preassigned: true }))
+      });
+    }
+    const remaining = state.studentNames.filter(n => !allAssigned.has(n));
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
+    goToStep(4);
+    renderTeams('teamsStageDrawing', true);
+    animateDrawing(remaining, 0);
+  }
+
+  function animateDrawing(queue, idx) {
+    if (idx >= queue.length) {
+      setTimeout(() => {
+        goToStep(5);
+        renderTeams('teamsStageFinal', false);
+        setupDragDrop();
+      }, 600);
+      return;
+    }
+    const studentName = queue[idx];
+    const minMembers = Math.min(...state.teams.map(t => t.members.length));
+    const candidateTeams = state.teams
+      .map((t, i) => ({ i, count: t.members.length }))
+      .filter(t => t.count === minMembers);
+    const targetIdx = candidateTeams[Math.floor(Math.random() * candidateTeams.length)].i;
+
+    const nameEl = document.getElementById('drawingName');
+    const arrowEl = document.getElementById('arrowIndicator');
+    const targetEl = document.getElementById('targetTeam');
+
+    nameEl.classList.remove('reveal');
+    arrowEl.classList.remove('show');
+    targetEl.classList.remove('show');
+    targetEl.textContent = '';
+
+    let shuffleCount = 0;
+    const shuffleMax = 8 + Math.floor(Math.random() * 6);
+    const shuffleInterval = setInterval(() => {
+      const randName = state.studentNames[Math.floor(Math.random() * state.studentNames.length)];
+      nameEl.textContent = randName;
+      nameEl.classList.add('pulse');
+      setTimeout(() => nameEl.classList.remove('pulse'), 100);
+      shuffleCount++;
+      if (shuffleCount >= shuffleMax) {
+        clearInterval(shuffleInterval);
+        setTimeout(() => {
+          nameEl.textContent = studentName;
+          nameEl.classList.add('reveal');
+          setTimeout(() => {
+            arrowEl.classList.add('show');
+            targetEl.textContent = `${state.teams[targetIdx].emoji} ${state.teams[targetIdx].name}!`;
+            targetEl.classList.add('show');
+            setTimeout(() => {
+              state.teams[targetIdx].members.push({ name: studentName, preassigned: false });
+              renderTeams('teamsStageDrawing', true);
+              setTimeout(() => animateDrawing(queue, idx + 1), 500);
+            }, 700);
+          }, 400);
+        }, 200);
+      }
+    }, 70);
+  }
+
+  function renderTeams(containerId, isDrawing) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    state.teams.forEach((team, i) => {
+      const box = document.createElement('div');
+      box.className = `team-box t${i}`;
+      box.innerHTML = `
+        <div class="team-header">
+          <div class="team-name">${team.emoji} ${team.name}</div>
+          <div class="team-count">${team.members.length}명</div>
+        </div>
+        <div class="members" data-team="${i}">
+          ${team.members.map(m =>
+            `<div class="member${m.preassigned ? ' preassigned' : ''}" draggable="${!isDrawing}" data-name="${m.name}">${m.name}</div>`
+          ).join('')}
+        </div>
+      `;
+      container.appendChild(box);
+    });
+  }
+
+  function loadStudentFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const names = text
+        .split(/[\n\r,，、\t]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+      if (names.length === 0) {
+        alert('파일에서 이름을 찾을 수 없어요. 파일을 확인해 주세요.');
+        return;
+      }
+      document.getElementById('studentNames').value = names.join('\n');
+      document.getElementById('studentCount').value = names.length;
+      const status = document.getElementById('fileStatus');
+      status.textContent = `✓ ${file.name}에서 ${names.length}명을 불러왔어요`;
+      status.className = 'help-text file-status-ok';
+    };
+    reader.onerror = function() {
+      alert('파일을 읽는 중 오류가 발생했어요.');
+    };
+    reader.readAsText(file, 'UTF-8');
+    event.target.value = '';
+  }
+
+  let selectedMove = null;
+
+  function setupDragDrop() {
+    let dragged = null;
+    document.querySelectorAll('#teamsStageFinal .member').forEach(el => {
+      el.addEventListener('dragstart', e => {
+        dragged = el;
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', e => {
+        el.classList.remove('dragging');
+      });
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        handleMemberTap(el);
+      });
+    });
+    document.querySelectorAll('#teamsStageFinal .members').forEach(zone => {
+      zone.addEventListener('dragover', e => {
+        e.preventDefault();
+        zone.classList.add('drag-over');
+      });
+      zone.addEventListener('dragleave', e => {
+        zone.classList.remove('drag-over');
+      });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (!dragged) return;
+        const fromTeam = parseInt(dragged.parentElement.dataset.team);
+        const toTeam = parseInt(zone.dataset.team);
+        const name = dragged.dataset.name;
+        moveMember(fromTeam, toTeam, name);
+      });
+    });
+    document.querySelectorAll('#teamsStageFinal .team-box').forEach(box => {
+      box.addEventListener('click', e => {
+        if (!selectedMove) return;
+        const zone = box.querySelector('.members');
+        const toTeam = parseInt(zone.dataset.team);
+        if (toTeam === selectedMove.fromTeam) {
+          cancelMove();
+          return;
+        }
+        moveMember(selectedMove.fromTeam, toTeam, selectedMove.name);
+        cancelMove();
+      });
+    });
+  }
+
+  function handleMemberTap(el) {
+    const fromTeam = parseInt(el.parentElement.dataset.team);
+    const name = el.dataset.name;
+    if (selectedMove && selectedMove.name === name && selectedMove.fromTeam === fromTeam) {
+      cancelMove();
+      return;
+    }
+    cancelMove();
+    selectedMove = { fromTeam, name };
+    el.classList.add('selected');
+    document.querySelectorAll('#teamsStageFinal .team-box').forEach((box, i) => {
+      if (i !== fromTeam) box.classList.add('move-target');
+    });
+    const hint = document.getElementById('moveHint');
+    document.getElementById('moveHintText').innerHTML = `<b>${name}</b> 학생을 어느 모둠으로 옮길까요? 옮길 모둠을 탭하세요.`;
+    hint.style.display = 'flex';
+  }
+
+  function cancelMove() {
+    selectedMove = null;
+    document.querySelectorAll('#teamsStageFinal .member.selected').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('#teamsStageFinal .team-box.move-target').forEach(el => el.classList.remove('move-target'));
+    const hint = document.getElementById('moveHint');
+    if (hint) hint.style.display = 'none';
+  }
+
+  function moveMember(fromTeam, toTeam, name) {
+    if (fromTeam === toTeam) return;
+    const memberObj = state.teams[fromTeam].members.find(m => m.name === name);
+    if (!memberObj) return;
+    state.teams[fromTeam].members = state.teams[fromTeam].members.filter(m => m.name !== name);
+    state.teams[toTeam].members.push(memberObj);
+    renderTeams('teamsStageFinal', false);
+    setupDragDrop();
+  }
+
+  function resetAll() {
+    cancelMove();
+    state = { teamCount: 4, studentCount: 24, studentNames: [], preassigned: [], teams: [], step: 1 };
+    document.getElementById('teamCount').value = 4;
+    document.getElementById('studentCount').value = 24;
+    document.getElementById('studentNames').value = '';
+    goToStep(1);
+  }
+
+  function reshuffle() {
+    cancelMove();
+    const allStudents = [];
+    const preassignedMap = {};
+    state.teams.forEach((t, i) => {
+      preassignedMap[i] = [];
+      t.members.forEach(m => {
+        if (m.preassigned) preassignedMap[i].push(m.name);
+        else allStudents.push(m.name);
+      });
+    });
+    for (let i = allStudents.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allStudents[i], allStudents[j]] = [allStudents[j], allStudents[i]];
+    }
+    state.teams.forEach((t, i) => {
+      t.members = preassignedMap[i].map(n => ({ name: n, preassigned: true }));
+    });
+    goToStep(4);
+    renderTeams('teamsStageDrawing', true);
+    animateDrawing(allStudents, 0);
+  }
+
+  function printResult() {
+    window.print();
+  }
+</script>
+</body>
+</html>

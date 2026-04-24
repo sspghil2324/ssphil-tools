@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>설곽 철학123</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #fef6f0 0%, #fef0f5 50%, #f0f4ff 100%);
+      min-height: 100vh;
+      color: #3d3d3d;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #5a4a8a;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: #8b7fa8;
+    }
+    .header-wrap {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left { text-align: left; }
+    .header-tool-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      padding: 10px 18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(150,130,180,0.1);
+      border: 1px solid rgba(255,255,255,0.8);
+      text-decoration: none;
+      color: #5a4a8a;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .header-tool-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(150,130,180,0.2);
+      border-color: rgba(184,165,216,0.4);
+    }
+    .selected-team-banner {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #eeedfe, #fbeaf0);
+      font-size: 14px;
+      font-weight: 600;
+      color: #3c3489;
+      text-align: center;
+    }
+    .controls-box {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      padding: 20px 24px;
+      margin: 0 auto 20px;
+      max-width: 900px;
+      border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(150,130,180,0.12);
+      border: 1px solid rgba(255,255,255,0.8);
+      text-align: center;
+    }
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .controls-row:last-child { margin-bottom: 0; }
+    select, input[type="number"] {
+      font-family: inherit;
+      font-size: 15px;
+      padding: 10px 14px;
+      border: 2px solid #e8ddf0;
+      border-radius: 12px;
+      background: white;
+      color: #3d3d3d;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, input[type="number"]:focus { border-color: #b8a5d8; }
+    .ctrl-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b5a9a;
+    }
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: white;
+      box-shadow: 0 2px 8px rgba(150,130,180,0.2);
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(150,130,180,0.3); }
+    button:active { transform: translateY(0); }
+    .btn-team-pick { background: linear-gradient(135deg, #d4537e, #993556); }
+    .btn-presenter { background: linear-gradient(135deg, #7f77dd, #534ab7); }
+    .btn-global { background: linear-gradient(135deg, #1d9e75, #0f6e56); }
+    .btn-reset { background: linear-gradient(135deg, #888780, #5f5e5a); }
+    .btn-edit { background: linear-gradient(135deg, #ba7517, #854f0b); }
+    .btn-timer-start { background: linear-gradient(135deg, #1d9e75, #0f6e56); }
+    .btn-timer-reset { background: linear-gradient(135deg, #888780, #5f5e5a); }
+    .team-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+    .team-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 14px 16px;
+      min-width: 190px;
+      flex: 1;
+      max-width: 220px;
+      box-shadow: 0 2px 12px rgba(150,130,180,0.1);
+      border: 2px solid transparent;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .team-card:hover {
+      box-shadow: 0 4px 18px rgba(150,130,180,0.2);
+    }
+    .team-card.t0 { border-color: #f4c0d1; background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, #fdf4f7 100%); }
+    .team-card.t1 { border-color: #cecbf6; background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, #f7f5ff 100%); }
+    .team-card.t2 { border-color: #9fe1cb; background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, #f0faf6 100%); }
+    .team-card.t3 { border-color: #fac775; background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, #fff7e9 100%); }
+    .team-card.highlight {
+      transform: scale(1.05);
+      box-shadow: 0 6px 24px rgba(150,130,180,0.3);
+    }
+    .team-card.t0.highlight { border-color: #d4537e; }
+    .team-card.t1.highlight { border-color: #7f77dd; }
+    .team-card.t2.highlight { border-color: #1d9e75; }
+    .team-card.t3.highlight { border-color: #ba7517; }
+    .team-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(150,130,180,0.2);
+    }
+    .team-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #5a4a8a;
+    }
+    .team-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b7fa8;
+      background: rgba(255,255,255,0.7);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+    .student-box {
+      background: white;
+      border: 1px solid rgba(150,130,180,0.15);
+      border-radius: 10px;
+      margin: 4px 0;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #4a3d6e;
+      transition: all 0.2s;
+    }
+    .student-box.selected {
+      background: linear-gradient(90deg, #eeedfe, #fff);
+      border-color: #7f77dd;
+      box-shadow: 0 0 0 3px rgba(127,119,221,0.2);
+      font-weight: 700;
+    }
+    .timer-section {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 24px rgba(150,130,180,0.12);
+      border: 1px solid rgba(255,255,255,0.8);
+      text-align: center;
+    }
+    #timerDisplay {
+      font-size: 100px;
+      font-weight: 800;
+      color: #5a4a8a;
+      margin: 16px 0 8px;
+      letter-spacing: -2px;
+      transition: color 0.3s;
+    }
+    #timerDisplay.urgent { color: #e24b4a; }
+    #timerDisplay.done {
+      color: #e24b4a;
+      animation: blink 0.6s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(90, 74, 138, 0.88);
+      backdrop-filter: blur(8px);
+      color: white;
+      font-size: 72px;
+      font-weight: 800;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      cursor: pointer;
+      z-index: 1000;
+      letter-spacing: -1px;
+    }
+    .overlay-sub {
+      font-size: 18px;
+      font-weight: 500;
+      opacity: 0.6;
+      margin-top: 16px;
+    }
+    @keyframes overlayIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .overlay-content {
+      animation: overlayIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+      text-align: center;
+    }
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 900;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+      animation: overlayIn 0.3s ease;
+    }
+    .modal h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #5a4a8a;
+      margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 14px;
+      color: #8b7fa8;
+      margin-bottom: 20px;
+    }
+    .modal-class-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .modal-class-tab {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 2px solid #e8ddf0;
+      background: white;
+      color: #6b5a9a;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+    .modal-class-tab:hover { border-color: #b8a5d8; transform: none; box-shadow: none; }
+    .modal-class-tab.active {
+      background: #eeedfe;
+      border-color: #7f77dd;
+      color: #3c3489;
+    }
+    .modal-team-section { margin-bottom: 12px; }
+    .modal-team-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .modal-team-name-input {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 2px solid #e8ddf0;
+      border-radius: 10px;
+      background: white;
+      color: #3d3d3d;
+      outline: none;
+      width: 100px;
+    }
+    .modal-team-name-input:focus { border-color: #b8a5d8; }
+    .modal-members-input {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 2px solid #e8ddf0;
+      border-radius: 10px;
+      background: white;
+      color: #3d3d3d;
+      outline: none;
+      flex: 1;
+      min-height: 38px;
+      resize: vertical;
+    }
+    .modal-members-input:focus { border-color: #b8a5d8; }
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .modal-actions-right { display: flex; gap: 10px; }
+    .btn-modal-cancel {
+      background: white;
+      color: #8b7fa8;
+      border: 2px solid #e8ddf0;
+      box-shadow: none;
+    }
+    .btn-modal-cancel:hover { background: #faf6ff; border-color: #d8c5e8; transform: none; box-shadow: none; }
+    .btn-modal-save { background: linear-gradient(135deg, #7f77dd, #534ab7); }
+    .btn-add-team {
+      background: white;
+      color: #6b5a9a;
+      border: 2px dashed #d8c5e8;
+      box-shadow: none;
+      font-size: 13px;
+      padding: 8px 14px;
+    }
+    .btn-add-team:hover { background: #faf6ff; transform: none; box-shadow: none; }
+    .btn-remove-team {
+      background: none;
+      color: #a598b8;
+      box-shadow: none;
+      padding: 6px 10px;
+      font-size: 13px;
+      border: 1px solid #e8ddf0;
+      border-radius: 8px;
+    }
+    .btn-remove-team:hover { color: #e24b4a; border-color: #f09595; background: #fcebeb; transform: none; box-shadow: none; }
+    footer {
+      text-align: center;
+      padding: 16px 0 8px;
+      font-size: 13px;
+      color: #b8a5d8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-wrap">
+    <div class="header-left">
+      <h1>설곽 철학123</h1>
+      <p class="subtitle">좋은 협력 실천하기</p>
+    </div>
+    <a href="team-maker.html" class="header-tool-link">🎲 팀 편성 도구 →</a>
+  </div>
+
+  <div class="controls-box">
+    <div class="controls-row">
+      <span class="ctrl-label">분반</span>
+      <select id="classSelect" onchange="loadTeams()">
+        <option value="1분반">1분반</option>
+        <option value="2분반">2분반</option>
+        <option value="3분반">3분반</option>
+        <option value="4분반">4분반</option>
+      </select>
+      <button class="btn-edit" onclick="openEditModal()">명단 수정</button>
+    </div>
+    <div class="controls-row">
+      <button class="btn-team-pick" onclick="animateTeamPick()">발표팀 뽑기</button>
+      <button class="btn-presenter" onclick="animatePresenterPick()">발표자 뽑기</button>
+      <button class="btn-global" onclick="animateGlobalPick()">전체 발표자</button>
+      <button class="btn-reset" onclick="resetGlobalQueue()">전체 초기화</button>
+    </div>
+    <div id="selectedTeamBanner" class="selected-team-banner" style="display:none;"></div>
+  </div>
+
+  <div class="team-grid" id="teamContainer"></div>
+
+  <div class="timer-section">
+    <div class="controls-row">
+      <span class="ctrl-label">분</span>
+      <input type="number" id="minutes" value="1" min="0" style="width:70px;">
+      <span class="ctrl-label">초</span>
+      <input type="number" id="seconds" value="0" min="0" max="59" style="width:70px;">
+      <button class="btn-timer-start" onclick="startTimer()">시작</button>
+      <button class="btn-timer-reset" onclick="resetTimer()">초기화</button>
+    </div>
+    <div id="timerDisplay">00:00</div>
+  </div>
+
+  <footer>설곽 철학123 · 좋은 협력 실천하기</footer>
+
+  <div class="overlay" id="overlay" onclick="hideOverlay()">
+    <div class="overlay-content">
+      <div id="overlayText"></div>
+      <div class="overlay-sub">화면을 탭하면 닫힙니다</div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal">
+      <h2>학생 명단 수정</h2>
+      <p class="modal-desc">팀 이름과 학생 이름(쉼표로 구분)을 수정하세요. 저장하면 바로 반영돼요.</p>
+      <div class="modal-class-tabs" id="modalClassTabs"></div>
+      <div id="modalTeamEditor"></div>
+      <div class="modal-actions">
+        <button class="btn-add-team" onclick="addTeamRow()">+ 팀 추가</button>
+        <div class="modal-actions-right">
+          <button class="btn-modal-cancel" onclick="closeEditModal()">취소</button>
+          <button class="btn-modal-save" onclick="saveEdit()">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="alarmSound" src="bell.wav" preload="auto"></audio>
+
+<script>
+  const defaultClasses = {
+    "1분반": {
+      "1팀": ["정시후","김지오","박종일","허재영"],
+      "2팀": ["심규빈","임영민","장태하","박준성"],
+      "3팀": ["홍승욱","한승규","김운채","김태용"],
+      "4팀": ["박준호","토이선우","유재우","최준우"]
+    },
+    "2분반": {
+      "1팀": ["석진희","서이준","윤창서"],
+      "2팀": ["김동건","이정현","오지성","고승희"],
+      "3팀": ["김지환","이승재","오지윤","임재현"],
+      "4팀": ["김동규","김대현","오윤","이승준"]
+    },
+    "3분반": {
+      "1팀": ["지승호","허조영","이솔","조유신"],
+      "2팀": ["손정우","김윤서","조준혁","박준혁"],
+      "3팀": ["김형우","김동현","이건우","김유안"],
+      "4팀": ["김재우","김진철","이재원","차민혁"]
+    },
+    "4분반": {
+      "1팀": ["심규성","이준빈","조은규","권영현"],
+      "2팀": ["오지호","김유준","김동희","왕주완"],
+      "3팀": ["박정현","윤서형","민성원","한준우"],
+      "4팀": ["김민찬A","임준호","손재원","이홍규"]
+    }
+  };
+
+  const teamIcons = ["🍀","🌈","🎈","⭐","💎","🌸","🔥","🌻"];
+  const teamColorIdx = [0,1,2,3,0,1,2,3];
+
+  let allClasses = JSON.parse(JSON.stringify(defaultClasses));
+  let currentTeams = {};
+  let teamQueue = [];
+  let selectedTeam = null;
+  let studentQueue = [];
+  let globalQueue = [];
+  let timerInterval;
+  let editingClass = "1분반";
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function loadTeams() {
+    const cls = document.getElementById("classSelect").value;
+    currentTeams = allClasses[cls];
+    teamQueue = shuffle(Object.keys(currentTeams));
+    selectedTeam = null;
+    studentQueue = [];
+    renderTeams();
+  }
+
+  function renderTeams() {
+    const container = document.getElementById("teamContainer");
+    container.innerHTML = "";
+    const keys = Object.keys(currentTeams);
+    keys.forEach((team, i) => {
+      const members = currentTeams[team];
+      const ci = teamColorIdx[i % teamColorIdx.length];
+      const icon = teamIcons[i % teamIcons.length];
+      const card = document.createElement("div");
+      card.className = "team-card t" + ci;
+      card.id = "team-" + team;
+      if (selectedTeam === team) card.classList.add("highlight");
+      card.innerHTML =
+        '<div class="team-header">' +
+          '<div class="team-name">' + icon + ' ' + team + '</div>' +
+          '<div class="team-count">' + members.length + '명</div>' +
+        '</div>';
+      card.onclick = function() { selectTeamByClick(team); };
+      members.forEach(function(name) {
+        const box = document.createElement("div");
+        box.className = "student-box";
+        box.id = "student-" + team + "-" + name;
+        box.textContent = name;
+        card.appendChild(box);
+      });
+      container.appendChild(card);
+    });
+    updateBanner();
+  }
+
+  function selectTeamByClick(team) {
+    document.querySelectorAll(".team-card").forEach(function(c) { c.classList.remove("highlight"); });
+    if (selectedTeam === team) {
+      selectedTeam = null;
+      studentQueue = [];
+    } else {
+      selectedTeam = team;
+      studentQueue = shuffle([].concat(currentTeams[team]));
+      document.getElementById("team-" + team).classList.add("highlight");
+    }
+    updateBanner();
+  }
+
+  function updateBanner() {
+    const banner = document.getElementById("selectedTeamBanner");
+    if (selectedTeam) {
+      const keys = Object.keys(currentTeams);
+      const idx = keys.indexOf(selectedTeam);
+      const icon = teamIcons[idx % teamIcons.length];
+      banner.textContent = icon + " " + selectedTeam + " 선택됨 — 발표자 뽑기를 눌러보세요!";
+      banner.style.display = "block";
+    } else {
+      banner.style.display = "none";
+    }
+  }
+
+  function animateTeamPick() {
+    if (!currentTeams || Object.keys(currentTeams).length === 0) return;
+    if (teamQueue.length === 0) teamQueue = shuffle(Object.keys(currentTeams));
+    const keys = Object.keys(currentTeams);
+    let count = 0;
+    const total = 18 + Math.floor(Math.random() * 8);
+    const interval = setInterval(function() {
+      document.querySelectorAll(".team-card").forEach(function(c) { c.classList.remove("highlight"); });
+      const rnd = keys[Math.floor(Math.random() * keys.length)];
+      document.getElementById("team-" + rnd).classList.add("highlight");
+      count++;
+      if (count > total) {
+        clearInterval(interval);
+        const selected = teamQueue.shift();
+        selectedTeam = selected;
+        studentQueue = shuffle([].concat(currentTeams[selected]));
+        document.querySelectorAll(".team-card").forEach(function(c) { c.classList.remove("highlight"); });
+        document.getElementById("team-" + selected).classList.add("highlight");
+        updateBanner();
+        const idx = keys.indexOf(selected);
+        const icon = teamIcons[idx % teamIcons.length];
+        showOverlay(icon + " " + selected);
+      }
+    }, 100);
+  }
+
+  function animatePresenterPick() {
+    if (!selectedTeam) return alert("먼저 팀 카드를 탭하거나, 발표팀 뽑기를 해주세요!");
+    if (studentQueue.length === 0) studentQueue = shuffle([].concat(currentTeams[selectedTeam]));
+    const members = currentTeams[selectedTeam];
+    const ids = members.map(function(n) { return "student-" + selectedTeam + "-" + n; });
+    let count = 0;
+    const total = 18 + Math.floor(Math.random() * 8);
+    const interval = setInterval(function() {
+      document.querySelectorAll(".student-box").forEach(function(b) { b.classList.remove("selected"); });
+      const rnd = ids[Math.floor(Math.random() * ids.length)];
+      const el = document.getElementById(rnd);
+      if (el) el.classList.add("selected");
+      count++;
+      if (count > total) {
+        clearInterval(interval);
+        const final = studentQueue.shift();
+        document.querySelectorAll(".student-box").forEach(function(b) { b.classList.remove("selected"); });
+        const el = document.getElementById("student-" + selectedTeam + "-" + final);
+        if (el) el.classList.add("selected");
+        showOverlay(final);
+      }
+    }, 100);
+  }
+
+  function animateGlobalPick() {
+    if (!currentTeams || Object.keys(currentTeams).length === 0) return;
+    if (globalQueue.length === 0) {
+      const all = [];
+      Object.values(currentTeams).forEach(function(arr) { arr.forEach(function(n) { all.push(n); }); });
+      globalQueue = shuffle(all);
+    }
+    const boxes = Array.from(document.querySelectorAll(".student-box"));
+    if (boxes.length === 0) return;
+    let count = 0;
+    const total = 18 + Math.floor(Math.random() * 8);
+    const interval = setInterval(function() {
+      boxes.forEach(function(b) { b.classList.remove("selected"); });
+      const rnd = boxes[Math.floor(Math.random() * boxes.length)];
+      rnd.classList.add("selected");
+      count++;
+      if (count > total) {
+        clearInterval(interval);
+        const name = globalQueue.shift();
+        boxes.forEach(function(b) { b.classList.remove("selected"); });
+        const el = boxes.find(function(b) { return b.textContent === name; });
+        if (el) el.classList.add("selected");
+        showOverlay(name);
+      }
+    }, 100);
+  }
+
+  function resetGlobalQueue() {
+    globalQueue = [];
+    document.querySelectorAll(".student-box").forEach(function(b) { b.classList.remove("selected"); });
+    document.querySelectorAll(".team-card").forEach(function(c) { c.classList.remove("highlight"); });
+    selectedTeam = null;
+    studentQueue = [];
+    teamQueue = shuffle(Object.keys(currentTeams));
+    updateBanner();
+  }
+
+  function showOverlay(text) {
+    document.getElementById("overlayText").textContent = text;
+    document.getElementById("overlay").style.display = "flex";
+  }
+  function hideOverlay() {
+    document.getElementById("overlay").style.display = "none";
+  }
+
+  function openEditModal() {
+    editingClass = document.getElementById("classSelect").value;
+    document.getElementById("editModal").classList.add("show");
+    renderModalTabs();
+    renderModalEditor();
+  }
+
+  function closeEditModal() {
+    document.getElementById("editModal").classList.remove("show");
+  }
+
+  function renderModalTabs() {
+    const container = document.getElementById("modalClassTabs");
+    container.innerHTML = "";
+    Object.keys(allClasses).forEach(function(cls) {
+      const tab = document.createElement("button");
+      tab.className = "modal-class-tab" + (cls === editingClass ? " active" : "");
+      tab.textContent = cls;
+      tab.onclick = function() {
+        editingClass = cls;
+        renderModalTabs();
+        renderModalEditor();
+      };
+      container.appendChild(tab);
+    });
+  }
+
+  function renderModalEditor() {
+    const container = document.getElementById("modalTeamEditor");
+    container.innerHTML = "";
+    const teams = allClasses[editingClass];
+    Object.keys(teams).forEach(function(teamName) {
+      const section = document.createElement("div");
+      section.className = "modal-team-section";
+      section.innerHTML =
+        '<div class="modal-team-row">' +
+          '<input class="modal-team-name-input" value="' + teamName + '" data-orig="' + teamName + '" placeholder="팀 이름">' +
+          '<textarea class="modal-members-input" rows="1" placeholder="학생 이름을 쉼표로 구분">' + teams[teamName].join(", ") + '</textarea>' +
+          '<button class="btn-remove-team" onclick="removeTeamRow(this)" title="이 팀 삭제">삭제</button>' +
+        '</div>';
+      container.appendChild(section);
+    });
+  }
+
+  function addTeamRow() {
+    const container = document.getElementById("modalTeamEditor");
+    const newIdx = container.children.length + 1;
+    const section = document.createElement("div");
+    section.className = "modal-team-section";
+    section.innerHTML =
+      '<div class="modal-team-row">' +
+        '<input class="modal-team-name-input" value="' + newIdx + '팀" data-orig="" placeholder="팀 이름">' +
+        '<textarea class="modal-members-input" rows="1" placeholder="학생 이름을 쉼표로 구분"></textarea>' +
+        '<button class="btn-remove-team" onclick="removeTeamRow(this)" title="이 팀 삭제">삭제</button>' +
+      '</div>';
+    container.appendChild(section);
+  }
+
+  function removeTeamRow(btn) {
+    const section = btn.closest(".modal-team-section");
+    if (document.querySelectorAll(".modal-team-section").length <= 1) {
+      alert("최소 1개 팀은 있어야 해요.");
+      return;
+    }
+    section.remove();
+  }
+
+  function saveEdit() {
+    const sections = document.querySelectorAll(".modal-team-section");
+    const newTeams = {};
+    let hasError = false;
+    sections.forEach(function(sec) {
+      const nameInput = sec.querySelector(".modal-team-name-input");
+      const membersInput = sec.querySelector(".modal-members-input");
+      const teamName = nameInput.value.trim();
+      if (!teamName) { hasError = true; return; }
+      const members = membersInput.value
+        .split(/[,\uFF0C\u3001\n]/)
+        .map(function(s) { return s.trim(); })
+        .filter(function(s) { return s.length > 0; });
+      newTeams[teamName] = members;
+    });
+    if (hasError) {
+      alert("팀 이름을 비워둘 수 없어요.");
+      return;
+    }
+    allClasses[editingClass] = newTeams;
+    var currentCls = document.getElementById("classSelect").value;
+    if (editingClass === currentCls) loadTeams();
+    closeEditModal();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    var m = parseInt(document.getElementById("minutes").value) || 0;
+    var s = parseInt(document.getElementById("seconds").value) || 0;
+    var t = m * 60 + s;
+    var display = document.getElementById("timerDisplay");
+    display.classList.remove("urgent", "done");
+    updateDisplay(t);
+    timerInterval = setInterval(function() {
+      t--;
+      if (t <= 10 && t > 0) display.classList.add("urgent");
+      if (t < 0) {
+        clearInterval(timerInterval);
+        display.textContent = "시간 종료!";
+        display.classList.remove("urgent");
+        display.classList.add("done");
+        try { document.getElementById("alarmSound").play(); } catch(e) {}
+      } else {
+        updateDisplay(t);
+      }
+    }, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    var display = document.getElementById("timerDisplay");
+    display.textContent = "00:00";
+    display.classList.remove("urgent", "done");
+  }
+
+  function updateDisplay(t) {
+    var mm = String(Math.floor(t / 60)).padStart(2, '0');
+    var ss = String(t % 60).padStart(2, '0');
+    document.getElementById("timerDisplay").textContent = mm + ":" + ss;
+  }
+
+  window.onload = loadTeams;
+</script>
+</body>
+</html>
