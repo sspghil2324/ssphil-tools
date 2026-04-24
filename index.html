@@ -450,7 +450,10 @@
       <div class="modal-class-tabs" id="modalClassTabs"></div>
       <div id="modalTeamEditor"></div>
       <div class="modal-actions">
-        <button class="btn-add-team" onclick="addTeamRow()">+ 팀 추가</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-add-team" onclick="addTeamRow()">+ 팀 추가</button>
+          <button class="btn-remove-team" onclick="resetToDefault()">기본 명단으로 되돌리기</button>
+        </div>
         <div class="modal-actions-right">
           <button class="btn-modal-cancel" onclick="closeEditModal()">취소</button>
           <button class="btn-modal-save" onclick="saveEdit()">저장</button>
@@ -492,7 +495,17 @@
   const teamIcons = ["🍀","🌈","🎈","⭐","💎","🌸","🔥","🌻"];
   const teamColorIdx = [0,1,2,3,0,1,2,3];
 
-  let allClasses = JSON.parse(JSON.stringify(defaultClasses));
+  let allClasses;
+  try {
+    const saved = localStorage.getItem('ssphil_classes');
+    if (saved) {
+      allClasses = JSON.parse(saved);
+    } else {
+      allClasses = JSON.parse(JSON.stringify(defaultClasses));
+    }
+  } catch(e) {
+    allClasses = JSON.parse(JSON.stringify(defaultClasses));
+  }
   let currentTeams = {};
   let teamQueue = [];
   let selectedTeam = null;
@@ -662,6 +675,15 @@
     updateBanner();
   }
 
+  function resetToDefault() {
+    if (!confirm('모든 분반의 명단을 HTML에 저장된 기본 명단으로 되돌릴까요?\n\n수정했던 내용이 모두 사라집니다.')) return;
+    allClasses = JSON.parse(JSON.stringify(defaultClasses));
+    try { localStorage.removeItem('ssphil_classes'); } catch(e) {}
+    loadTeams();
+    renderModalTabs();
+    renderModalEditor();
+  }
+
   function showOverlay(text) {
     document.getElementById("overlayText").textContent = text;
     document.getElementById("overlay").style.display = "flex";
@@ -757,6 +779,7 @@
       return;
     }
     allClasses[editingClass] = newTeams;
+    try { localStorage.setItem('ssphil_classes', JSON.stringify(allClasses)); } catch(e) {}
     var currentCls = document.getElementById("classSelect").value;
     if (editingClass === currentCls) loadTeams();
     closeEditModal();
