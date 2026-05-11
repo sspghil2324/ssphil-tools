@@ -383,6 +383,16 @@
       border-radius: 8px;
     }
     .btn-remove-team:hover { color: #e24b4a; border-color: #f09595; background: #fcebeb; transform: none; box-shadow: none; }
+    .data-status {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+    .data-status.cloud { background: #e8f5e9; color: #2e7d32; }
+    .data-status.local { background: #fff3e0; color: #e65100; }
+    .data-status.default { background: #f3e5f5; color: #6a1b9a; }
     footer {
       text-align: center;
       padding: 16px 0 8px;
@@ -417,6 +427,7 @@
       <button class="btn-global" onclick="animateGlobalPick()">전체 발표자</button>
       <button class="btn-reset" onclick="resetGlobalQueue()">전체 초기화</button>
     </div>
+    <div id="dataStatus"></div>
     <div id="selectedTeamBanner" class="selected-team-banner" style="display:none;"></div>
   </div>
 
@@ -446,7 +457,7 @@
   <div class="modal-backdrop" id="editModal">
     <div class="modal">
       <h2>학생 명단 수정</h2>
-      <p class="modal-desc">팀 이름과 학생 이름(쉼표로 구분)을 수정하세요. 저장하면 바로 반영돼요.</p>
+      <p class="modal-desc">팀 이름과 학생 이름(쉼표로 구분)을 수정하세요. 저장하면 JSON 파일이 다운로드됩니다. 그 파일을 GitHub 저장소에 업로드하면 모든 기기에 반영돼요.</p>
       <div class="modal-class-tabs" id="modalClassTabs"></div>
       <div id="modalTeamEditor"></div>
       <div class="modal-actions">
@@ -465,6 +476,15 @@
   <audio id="alarmSound" src="bell.wav" preload="auto"></audio>
 
 <script>
+  /* ============================================================
+     ★ 설정: 아래 URL을 본인의 GitHub 저장소에 맞게 수정하세요
+     ============================================================
+     형식: https://raw.githubusercontent.com/사용자명/저장소명/브랜치/data.json
+     예시: https://raw.githubusercontent.com/hong123/philosophy-class/main/data.json
+  */
+  const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/sspghil2324/ssphil-tools/main/data.json';
+  /* ============================================================ */
+
   const defaultClasses = {
     "1분반": {
       "1팀": ["정시후","김지오","박종일","허재영"],
@@ -496,16 +516,7 @@
   const teamColorIdx = [0,1,2,3,0,1,2,3];
 
   let allClasses;
-  try {
-    const saved = localStorage.getItem('ssphil_classes');
-    if (saved) {
-      allClasses = JSON.parse(saved);
-    } else {
-      allClasses = JSON.parse(JSON.stringify(defaultClasses));
-    }
-  } catch(e) {
-    allClasses = JSON.parse(JSON.stringify(defaultClasses));
-  }
+  let dataSource = 'default';
   let currentTeams = {};
   let teamQueue = [];
   let selectedTeam = null;
@@ -513,6 +524,71 @@
   let globalQueue = [];
   let timerInterval;
   let editingClass = "1분반";
+
+  /* ── GitHub에서 data.json 불러오기 ── */
+  async function loadFromGitHub() {
+    try {
+      const res = await fetch(GITHUB_DATA_URL + '?t=' + Date.now());
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data;
+    } catch(e) {
+      console.log('GitHub 로드 실패, 로컬 데이터 사용:', e);
+      return null;
+    }
+  }
+
+  /* ── JSON 파일 다운로드 (수동 업로드용) ── */
+  function downloadDataFile(data) {
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* ── 데이터 출처 표시 ── */
+  function showDataStatus(source) {
+    var el = document.getElementById('dataStatus');
+    if (source === 'cloud') {
+      el.innerHTML = '<span class="data-status cloud">☁️ GitHub 데이터 사용 중</span>';
+    } else if (source === 'local') {
+      el.innerHTML = '<span class="data-status local">💾 로컬 캐시 사용 중 (GitHub 연결 실패)</span>';
+    } else {
+      el.innerHTML = '<span class="data-status default">📋 기본 명단 사용 중</span>';
+    }
+  }
+
+  /* ── 초기화 ── */
+  async function initApp() {
+    // 1순위: GitHub에서 불러오기
+    var githubData = await loadFromGitHub();
+    if (githubData) {
+      allClasses = githubData;
+      dataSource = 'cloud';
+    } else {
+      // 2순위: localStorage 캐시
+      try {
+        var saved = localStorage.getItem('ssphil_classes');
+        if (saved) {
+          allClasses = JSON.parse(saved);
+          dataSource = 'local';
+        } else {
+          allClasses = JSON.parse(JSON.stringify(defaultClasses));
+          dataSource = 'default';
+        }
+      } catch(e) {
+        allClasses = JSON.parse(JSON.stringify(defaultClasses));
+        dataSource = 'default';
+      }
+    }
+    showDataStatus(dataSource);
+    loadTeams();
+  }
 
   function shuffle(arr) {
     const a = [...arr];
@@ -676,9 +752,12 @@
   }
 
   function resetToDefault() {
-    if (!confirm('모든 분반의 명단을 HTML에 저장된 기본 명단으로 되돌릴까요?\n\n수정했던 내용이 모두 사라집니다.')) return;
+    if (!confirm('모든 분반의 명단을 기본 명단으로 되돌릴까요?\n\n수정했던 내용이 모두 사라집니다.\nGitHub에도 반영하려면 다운로드된 파일을 업로드하세요.')) return;
     allClasses = JSON.parse(JSON.stringify(defaultClasses));
     try { localStorage.removeItem('ssphil_classes'); } catch(e) {}
+    downloadDataFile(allClasses);
+    dataSource = 'default';
+    showDataStatus(dataSource);
     loadTeams();
     renderModalTabs();
     renderModalEditor();
@@ -779,10 +858,17 @@
       return;
     }
     allClasses[editingClass] = newTeams;
+
+    // localStorage에 캐시 저장 (현재 기기에서 즉시 반영)
     try { localStorage.setItem('ssphil_classes', JSON.stringify(allClasses)); } catch(e) {}
+
+    // data.json 파일 다운로드 (GitHub에 수동 업로드용)
+    downloadDataFile(allClasses);
+
     var currentCls = document.getElementById("classSelect").value;
     if (editingClass === currentCls) loadTeams();
     closeEditModal();
+    alert('✅ 저장 완료!\n\n현재 기기에는 바로 반영되었습니다.\n다른 기기에서도 반영하려면, 다운로드된 data.json 파일을\nGitHub 저장소에 업로드해주세요.');
   }
 
   function startTimer() {
@@ -821,7 +907,8 @@
     document.getElementById("timerDisplay").textContent = mm + ":" + ss;
   }
 
-  window.onload = loadTeams;
+  // 앱 시작
+  window.onload = initApp;
 </script>
 </body>
 </html>
