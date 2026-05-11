@@ -123,6 +123,7 @@
     .btn-global { background: linear-gradient(135deg, #1d9e75, #0f6e56); }
     .btn-reset { background: linear-gradient(135deg, #888780, #5f5e5a); }
     .btn-edit { background: linear-gradient(135deg, #ba7517, #854f0b); }
+    .btn-download { background: linear-gradient(135deg, #3b82c4, #1d5a8e); }
     .btn-timer-start { background: linear-gradient(135deg, #1d9e75, #0f6e56); }
     .btn-timer-reset { background: linear-gradient(135deg, #888780, #5f5e5a); }
     .team-grid {
@@ -420,6 +421,7 @@
         <option value="4분반">4분반</option>
       </select>
       <button class="btn-edit" onclick="openEditModal()">명단 수정</button>
+      <button class="btn-download" onclick="downloadDataFile(allClasses)">📥 data.json 저장</button>
     </div>
     <div class="controls-row">
       <button class="btn-team-pick" onclick="animateTeamPick()">발표팀 뽑기</button>
@@ -476,14 +478,8 @@
   <audio id="alarmSound" src="bell.wav" preload="auto"></audio>
 
 <script>
-  /* ============================================================
-     ★ 설정: 아래 URL을 본인의 GitHub 저장소에 맞게 수정하세요
-     ============================================================
-     형식: https://raw.githubusercontent.com/사용자명/저장소명/브랜치/data.json
-     예시: https://raw.githubusercontent.com/hong123/philosophy-class/main/data.json
-  */
-  const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/sspghil2324/ssphil-tools/main/data.json';
-  /* ============================================================ */
+  /* data.json을 같은 저장소에 올려두면 자동으로 불러옵니다 */
+  const GITHUB_DATA_URL = 'data.json';
 
   const defaultClasses = {
     "1분반": {
